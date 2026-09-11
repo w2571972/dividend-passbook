@@ -824,7 +824,11 @@ export default function App() {
         {tab === "ledger" && data && <LedgerTab data={data} local={local} updateLocal={updateLocal} />}
 
         <p style={{ fontSize: 11, color: C.muted, textAlign: "center", lineHeight: 1.6, margin: "4px 0 24px" }}>
-          資料來源：FinMind、臺灣證券交易所 OpenAPI。本工具僅供整理與學習，不構成投資建議。
+          資料來源：臺灣證券交易所，依
+          <a href="https://data.gov.tw/license" target="_blank" rel="noreferrer" style={{ color: C.muted }}>
+            政府資料開放授權條款－第 1 版
+          </a>
+          利用，經 FinMind 與證交所 OpenAPI 取得。殖利率、填息天數等為本站依原始資料計算的結果。本工具僅供整理與學習，不構成投資建議。
         </p>
       </div>
     </div>
