@@ -44,6 +44,8 @@ jobs:
             echo "資料沒有變化"
           else
             git commit -m "更新股票資料 $(TZ=Asia/Taipei date +%F)"
+            # 排隊中的執行可能拿到較舊的 main；接到最新 main 後面再推，stocks.json 衝突時以剛抓的資料為準
+            git pull --rebase -X theirs origin main
             git push
           fi
 
