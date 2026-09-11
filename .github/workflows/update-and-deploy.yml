@@ -1,0 +1,74 @@
+name: 更新資料並部署
+
+on:
+  schedule:
+    # 台灣時間週一到週五 18:30（GitHub 使用 UTC，所以寫 10:30）
+    - cron: "30 10 * * 1-5"
+  workflow_dispatch: # 允許在 Actions 頁面手動執行
+  push:
+    branches: [main] # 修改 watchlist.json 或程式碼後自動重跑
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 安裝 Python 套件
+        run: pip install requests
+
+      - name: 抓取股票資料
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: python scripts/fetch_data.py
+
+      - name: 把新資料存回儲存庫
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/stocks.json
+          if git diff --cached --quiet; then
+            echo "資料沒有變化"
+          else
+            git commit -m "更新股票資料 $(TZ=Asia/Taipei date +%F)"
+            git push
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: 建置網頁
+        run: |
+          npm ci
+          npm run build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
